@@ -1,0 +1,21 @@
+python -m pip install dbt-core dbt-bigquery
+
+#criar uma brach de desenvolvimento
+git checkout -b develop
+
+git branch => verificar a branch
+
+git checkout nome-da-branch => canso não estiver
+
+#para iniciar oprojeto no terminal digite dbt init
+#coloque o nome do projeto
+#selecione [1] bigquery = digite 1
+#autenticação = digite 1
+#id do projeto = digite 1
+#dataser = digite 1
+#threads = digite 1
+#job_executation_timeouts = digite 1
+#desired = digite 1
+
+#para verificar se o projeto em dbt está pronto para rodar utilize o comando dbt debug
+
