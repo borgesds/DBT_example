@@ -19,3 +19,27 @@ git checkout nome-da-branch => canso não estiver
 
 #para verificar se o projeto em dbt está pronto para rodar utilize o comando dbt debug
 
+#crie um arquivo .env para colocar suas credenciais dentro da pasta dbt_exemple ou do projeto que você criou
+#coleque a variavel do seu dataset export DBT_DBNAME = 'dbt_dw'
+
+#vai na sua /home/borges/.dbt e abra em um novo vscode para editar
+#dentro da pasta existe dois arquis .yml, o arqyuvo profiles.yml é onde fica suas configurações
+#provavelmente pode não funcionar então fassa esse proximo passo
+
+#crie um arquivo .yml como nome de profiles.yml dentro da pasta dbt_exemple ou do projeto que você criou
+#arquivo:
+    dbt_example:
+        target: dev
+        outputs:
+            dev:
+            type: bigquery
+            method: service-account
+            project: 'dbt-projeto-442519'
+            dataset: "{{ env_var('DBT_DBNAME', 'dbt_dw') }}" #chama sua variavel
+            threads: 4
+            keyfile: /home/borges/.dbt/dbt-projeto-ccxssdfrgrrgrrgrg.json #passa suas credenciais
+
+#depois tente rodar dbt debug para ver se vai da tudo ok, entre dentro da pasta criada para o seu projeto, nesse caso dbt_exemple
+
+#deu OK, então podemos começar a trabalhar
+
