@@ -43,3 +43,8 @@ git checkout nome-da-branch => canso não estiver
 
 #deu OK, então podemos começar a trabalhar
 
+#dentro do arquivo dbt_project.yml temque fazer algumas configurações
+#em profile tem que ser o mesmo nome que você configurou la no arquivo profile.yml
+#dentro da pasta /dbt_example/models você cria as pastas que estiver colocando dentro do arquivo .yml
+#em models coloca a cofiguração como:
+
