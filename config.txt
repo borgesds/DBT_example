@@ -1,0 +1,45 @@
+python -m pip install dbt-core dbt-bigquery
+
+#criar uma brach de desenvolvimento
+git checkout -b develop
+
+git branch => verificar a branch
+
+git checkout nome-da-branch => canso não estiver
+
+#para iniciar oprojeto no terminal digite dbt init
+#coloque o nome do projeto
+#selecione [1] bigquery = digite 1
+#autenticação = digite 1
+#id do projeto = digite 1
+#dataser = digite 1
+#threads = digite 1
+#job_executation_timeouts = digite 1
+#desired = digite 1
+
+#para verificar se o projeto em dbt está pronto para rodar utilize o comando dbt debug
+
+#crie um arquivo .env para colocar suas credenciais dentro da pasta dbt_exemple ou do projeto que você criou
+#coleque a variavel do seu dataset export DBT_DBNAME = 'dbt_dw'
+
+#vai na sua /home/borges/.dbt e abra em um novo vscode para editar
+#dentro da pasta existe dois arquis .yml, o arqyuvo profiles.yml é onde fica suas configurações
+#provavelmente pode não funcionar então fassa esse proximo passo
+
+#crie um arquivo .yml como nome de profiles.yml dentro da pasta dbt_exemple ou do projeto que você criou
+#arquivo:
+    dbt_example:
+        target: dev
+        outputs:
+            dev:
+            type: bigquery
+            method: service-account
+            project: 'dbt-projeto-442519'
+            dataset: "{{ env_var('DBT_DBNAME', 'dbt_dw') }}" #chama sua variavel
+            threads: 4
+            keyfile: /home/borges/.dbt/dbt-projeto-ccxssdfrgrrgrrgrg.json #passa suas credenciais
+
+#depois tente rodar dbt debug para ver se vai da tudo ok, entre dentro da pasta criada para o seu projeto, nesse caso dbt_exemple
+
+#deu OK, então podemos começar a trabalhar
+
