@@ -47,4 +47,120 @@ git checkout nome-da-branch => canso não estiver
 #em profile tem que ser o mesmo nome que você configurou la no arquivo profile.yml
 #dentro da pasta /dbt_example/models você cria as pastas que estiver colocando dentro do arquivo .yml
 #em models coloca a cofiguração como:
+#arquivo:
+    name: 'dbt_example'
+    version: '1.0.0'
+
+    # This setting configures which "profile" dbt uses for this project.
+    profile: 'dbt_example'
+
+    model-paths: ["models"]
+    analysis-paths: ["analyses"]
+    test-paths: ["tests"]
+    seed-paths: ["seeds"]
+    macro-paths: ["macros"]
+    snapshot-paths: ["snapshots"]
+
+    clean-targets:         # directories to be removed by `dbt clean`
+    - "target"
+    - "dbt_packages"
+
+    models:
+    dbt_example:
+        # Config indicated by + and applies to all files under models/example/
+        # example:
+        staging:
+        schema: staging
+        materialized: table
+        tags: [staging]
+        
+        intermediate: # aqui não vamos criar tabelas mais vamos executar o codigo
+        materialized: ephemeral
+        tags: [intermediate]
+        
+        marts:
+        schema: marts
+        materialized: table
+        tags: [marts]
+
+#dentro da pasta models/staging crie duas ou mais pastas que vai representar suas tabelas ou schemas que vai puxar do seu DW que são suas fontes de dados
+#dentro das pastas você vai criar as sources.yml que contem as informações dos dados na suas tabelas, o arquivo fica assim:
+    version: 2
+
+    sources:
+    - name: finance
+        description: "Dados brutos do sistema financeiro da empresa"
+        schema: data_set_financial
+        loader: bigquery
+        loaded_at_field: data_carga
+        meta:
+        owner: "Empresa byty"
+        freshness:
+        warn_after: {count: 1, period: day}
+        error_after: {count: 2, period: day}
+
+        tables:
+        - name: dados_financeiros
+            description: "Tabela com os lancamentos financeiros da empresa"
+            columns:
+            - name: nome
+                description: "Nome do lancamento"
+            - name: data
+                description: "Data do lancamento"
+            - name: valor
+                description: "Valor do lancamento"
+            - name: status
+                description: "Status do lancamento"
+            - name: banco
+                description: "Banco do lancamento"
+            - name: destino
+                description: "Destino do lancamento"
+            - name: responsavel
+                description: "Responsavel pelo lancamento"
+            - name: tipo
+                description: "Tipo do lancamento"
+            - name: valor_real
+                description: "Valor real do lancamento"
+            - name: categoria
+                description: "Categoria do lancamento"
+            - name: mes
+                description: "Mes do lancamento"
+            - name: id
+                description: "ID do lancamento"
+
+#os seeds são opcionais, são arquivos csv que vão ser adicomados no deu DW, podem ser usados para enriquecer dados, de-para ou elementos pontuais
+#esses arquivos tem que ficar dentro das pastas seeds
+#se você rodar dbt seed ele faz o insert dentro do banco automaticamente criando tabla com esses dados, então tome cuidado
+#podemos fazer uma cofiguração no dbt_project.yml passando algumas configurações
+#então dentro do arquivo fora do seguimento models, la em baixo adcione a cofiguração:
+    models:
+        dbt_example:
+            # Config indicated by + and applies to all files under models/example/
+            # example:
+            staging:
+            schema: staging
+            materialized: table
+            tags: [staging]
+            
+            intermediate: # aqui não vamos criar tabelas mais vamos executar o codigo
+            materialized: ephemeral
+            tags: [intermediate]
+            
+            marts:
+            schema: marts
+            materialized: table
+            tags: [marts]
+
+    seeds: # aqui vamos colocar fora do schema dbt_dw <==============
+        dbt_example:
+        +schema: seeds
+        tags: ['seeds']
+
+#depois que você rodar o dbt seed, cria varias tabelas que buscaram os dados csv
+
+#agora dentro da pasta models em staging vamos criar uma nova pasta chama northwind para manipular esses dados novos
+
+
+
+
 
