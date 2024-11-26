@@ -43,3 +43,314 @@ git checkout nome-da-branch => canso não estiver
 
 #deu OK, então podemos começar a trabalhar
 
+#dentro do arquivo dbt_project.yml temque fazer algumas configurações
+#em profile tem que ser o mesmo nome que você configurou la no arquivo profile.yml
+#dentro da pasta /dbt_example/models você cria as pastas que estiver colocando dentro do arquivo .yml
+#em models coloca a cofiguração como:
+#arquivo:
+    name: 'dbt_example'
+    version: '1.0.0'
+
+    # This setting configures which "profile" dbt uses for this project.
+    profile: 'dbt_example'
+
+    model-paths: ["models"]
+    analysis-paths: ["analyses"]
+    test-paths: ["tests"]
+    seed-paths: ["seeds"]
+    macro-paths: ["macros"]
+    snapshot-paths: ["snapshots"]
+
+    clean-targets:         # directories to be removed by `dbt clean`
+    - "target"
+    - "dbt_packages"
+
+    models:
+    dbt_example:
+        # Config indicated by + and applies to all files under models/example/
+        # example:
+        staging:
+        schema: staging
+        materialized: table
+        tags: [staging]
+        
+        intermediate: # aqui não vamos criar tabelas mais vamos executar o codigo
+        materialized: ephemeral
+        tags: [intermediate]
+        
+        marts:
+        schema: marts
+        materialized: table
+        tags: [marts]
+
+#dentro da pasta models/staging crie duas ou mais pastas que vai representar suas tabelas ou schemas que vai puxar do seu DW que são suas fontes de dados
+#dentro das pastas você vai criar as sources.yml que contem as informações dos dados na suas tabelas, o arquivo fica assim:
+    version: 2
+
+    sources:
+    - name: finance
+        description: "Dados brutos do sistema financeiro da empresa"
+        schema: data_set_financial
+        loader: bigquery
+        loaded_at_field: data_carga
+        meta:
+        owner: "Empresa byty"
+        freshness:
+        warn_after: {count: 1, period: day}
+        error_after: {count: 2, period: day}
+
+        tables:
+        - name: dados_financeiros
+            description: "Tabela com os lancamentos financeiros da empresa"
+            columns:
+            - name: nome
+                description: "Nome do lancamento"
+            - name: data
+                description: "Data do lancamento"
+            - name: valor
+                description: "Valor do lancamento"
+            - name: status
+                description: "Status do lancamento"
+            - name: banco
+                description: "Banco do lancamento"
+            - name: destino
+                description: "Destino do lancamento"
+            - name: responsavel
+                description: "Responsavel pelo lancamento"
+            - name: tipo
+                description: "Tipo do lancamento"
+            - name: valor_real
+                description: "Valor real do lancamento"
+            - name: categoria
+                description: "Categoria do lancamento"
+            - name: mes
+                description: "Mes do lancamento"
+            - name: id
+                description: "ID do lancamento"
+
+#os seeds são opcionais, são arquivos csv que vão ser adicomados no deu DW, podem ser usados para enriquecer dados, de-para ou elementos pontuais
+#esses arquivos tem que ficar dentro das pastas seeds
+#se você rodar dbt seed ele faz o insert dentro do banco automaticamente criando tabla com esses dados, então tome cuidado
+#podemos fazer uma cofiguração no dbt_project.yml passando algumas configurações
+#então dentro do arquivo fora do seguimento models, la em baixo adcione a cofiguração:
+    models:
+        dbt_example:
+            # Config indicated by + and applies to all files under models/example/
+            # example:
+            staging:
+            schema: staging
+            materialized: table
+            tags: [staging]
+            
+            intermediate: # aqui não vamos criar tabelas mais vamos executar o codigo
+            materialized: ephemeral
+            tags: [intermediate]
+            
+            marts:
+            schema: marts
+            materialized: table
+            tags: [marts]
+
+    seeds: # aqui vamos colocar fora do schema dbt_dw <==============
+        dbt_example:
+        +schema: seeds
+        tags: ['seeds']
+
+#depois que você rodar o dbt seed, cria varias tabelas que buscaram os dados csv
+
+#agora dentro da pasta models em staging vamos criar uma nova pasta chama northwind para manipular esses dados novos, com isso vamos criar um novo arquivo sources.yml:
+    version: 2
+
+    sources:
+    - name: northwind
+        description: "Dados brutos do sistema de vendas da empresa"
+        schema: dbt_dw_seeds
+        loader: bigquery
+
+        tables:
+        - name: orders
+            description: "Tabela com os pedidos da empresa"
+            columns:
+            - name: order_id
+                data_tests:
+                - unique
+                - not_null
+            - name: customer_id
+            - name: employee_id
+            - name: order_date
+            - name: required_date
+            - name: shipped_date
+            - name: ship_via
+            - name: freight
+            - name: ship_name
+            - name: ship_address
+            - name: ship_city
+            - name: ship_region
+            - name: ship_postal_code
+            - name: ship_country
+
+#dentro da pasta northwind, vamos criar o arquivo que vai receber o sql, lembrando que temos que seguir um padrão, como estamos na pasta staging vamo concatenar a abreviação do nome da pasta que é stg com o nome da tabela que vai ser a orders que vai ficar assim, stg_orders.sql
+
+#lembrandoque na staging não vamos fazer tranformações pesadas, fazemos isso na intermediary para cima
+
+#boas praticas do dbt é sempre escrever como cte, mais sempre analise o motivo das tratativas
+
+#no dbt na hora que você vai buscar a tabela no from é uma boa pratica buscar direto do souces.yml que você criou, se você colocar o schema e buscar a tabela direto então não precisa do souces, então o padrão é passar o nome que esta o souces e depois a tabela:
+    with orders as (
+        SELECT 
+            order_id, 
+            customer_id, 
+            employee_id, 
+            order_date, 
+            required_date, 
+            shipped_date, 
+            ship_via, 
+            freight, 
+            ship_name, 
+            ship_address, 
+            ship_city, 
+            ship_region, 
+            ship_postal_code, 
+            ship_country 
+        FROM {{ source('northwind', 'orders') }}
+    )
+
+    SELECT * 
+    FROM orders
+
+#para testar você pode rodar o comando dbt run -s stg_orders
+
+#podemos fazer uma tratativa simples, na coluna shipped_date vamos verificar se está null, se estiver vamos colocar como envio pendente caso contrario enviado:
+    with orders as (
+        SELECT 
+            order_id, 
+            customer_id, 
+            employee_id, 
+            order_date, 
+            required_date, 
+            shipped_date, 
+            ship_via, 
+            freight, 
+            ship_name, 
+            ship_address, 
+            ship_city, 
+            ship_region, 
+            ship_postal_code, 
+            ship_country,
+            CASE 
+                WHEN shipped_date IS NULL THEN 'envio pendente' 
+                ELSE 'enviado'
+            END AS status_envio
+        FROM {{ source('northwind', 'orders') }}
+    )
+
+    SELECT * 
+    FROM orders
+
+#nas stages tempo coisa minimas como um case ou uma tranformação de tipo de dados
+
+#camada intermediate
+
+#na pasta model vamos criar uma nova pasta chamada intermediate
+
+#so para lembra, no arquivo dbt_procet.yml a pasta intermediate esta como materialized: ephemeral, ela é uma pontem entre o staging para a marts
+
+#na intermediate é onde vamos tratar as coisas mais pesadas
+
+#na intermediate vamos criar pastas por projetos como comercial, vendas e outros
+#então criamos uma pasta chamada comercial e dentro um arquivo chamado de int_vendas.sql
+
+#no arquivo podemos atribuir um config, que podemos alterar o que foi estabelecido dentro do dbt_project.yml global e o que vai alterar nó esse projeto
+#com agora estamos buscando a tabela orders que foi criada la na staging vamos usar ref para buscar:
+    {{
+        config(
+            tags=['comercial']
+        )
+    }}
+
+    with orders as (
+        SELECT 
+            extract(month from order_date) as mes,
+            extract(year from order_date) as ano,
+            freight as total_frete
+        FROM {{ref('stg_orders')}}
+    ),
+    vendas as (
+        SELECT
+            mes,
+            ano,
+            SUM(total_frete) as total_frete
+        FROM orders
+        GROUP BY
+            mes,
+            ano
+    )
+
+    SELECT *
+    FROM vendas
+
+
+#agora vamos falar de marts
+
+#crie uma pasta chamada marts e crie uma pasta dentro chamada comercial
+#dentro da pasta comecial vamos criar outras pastas para tabelas fatos(facts) e dimensões(dimensions)
+#para os arquivos camos usar fct no inicio e para dimensões dim, ficaria assim, fct_vendas.sql e dim_clientes.sql
+#arquivo fct_vendas.sql:
+   {{
+        config(
+            tags=['comercial']
+        )
+    }}
+
+    with vendas as (
+        SELECT *
+        FROM {{ ref('int_vendas') }}
+    )
+
+    SELECT *
+    FROM vendas
+    
+
+#agora uma boa pratica e ter um .yml para a dim e para a fct, esse arquivo vai ser usado para documentação no futuro
+#tipo do arquivo .yml:
+    version: 1
+
+    models:
+    - name: fct_vendas
+        description: "Fato de vendas da empresa"
+
+        columns:
+        - name: mes
+            description: "Mês da venda"
+            data_tests:
+            - not_null
+            
+        - name: ano
+            description: "Ano da venda"
+        
+        - name: total_frete
+            description: "Total de frete"
+            data_tests:
+            - not_null
+
+
+#e em marts também não devemos ter transformações pesadas, so na intermediate, salvo um union.
+
+#para rodar a fato no marts o comando é dbt run -s fct_vendas
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
