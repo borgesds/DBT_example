@@ -7,7 +7,7 @@ git branch => verificar a branch
 
 git checkout nome-da-branch => canso não estiver
 
-#para iniciar oprojeto no terminal digite dbt init
+#para iniciar o projeto no terminal digite dbt init
 #coloque o nome do projeto
 #selecione [1] bigquery = digite 1
 #autenticação = digite 1
