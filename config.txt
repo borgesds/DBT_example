@@ -338,7 +338,25 @@ git checkout nome-da-branch => canso não estiver
 
 #para rodar a fato no marts o comando é dbt run -s fct_vendas
 
+#principais comando do DBT
 
+#dbt debug = ele server para ver as conexões e outros elementos que podem estar quebrado ou estão ok
+#dbt run = executa dos os modelos que existe dentro do dbt
+#dbt run -s <nome modelo> = executa um unico modelo
+#dbt run -s <nome modelo> <nome modelo> = executa varios modelos modelo
+#dbt run -s +<nome modelo> = executa um unico modelo, com o + na frente do nome ele vai rodar tudo antes até chegar ao que você pediu para rodar
+#dbt run -s <nome modelo>+ = executa um unico modelo, com o + atrás do nome ele vai rodar o que você pediu e todo depois dele
+#dbt run --exclude <nome modelo> = roda todos os modelos menos o que você pediu
+#dbt test = roda todos os testes de todas as tabelas criadas
+#dbt test -s <nome modelo> = roda o teste do modelo que você pediu
+#dbt compile = cria uma verificação que não adciona nada no seu banco, só verifica se vai rodar
+#dbt clean = limpa pastas de caches
+
+#documentação no dbt
+
+#para gerar a documentação use o comando dbt docs generate
+#para visualizar a documentação vamos rodar o comando para criar um server local:
+    dbt docs serve --host 127.0.0.1
 
 
 
